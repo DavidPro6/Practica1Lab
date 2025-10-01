@@ -4,4 +4,45 @@
         <!-- Customize your dark theme here. -->
         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
     </style>
+    <!-- Añade este estilo dentro de la etiqueta <resources> -->
+    <style name="QuizRadioButton" parent="Widget.AppCompat.CompoundButton.RadioButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:background">@drawable/radio_button_background_selector</item>
+        <item name="android:button">@null</item>
+        <item name="android:elevation">4dp</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <!-- Estilo para el Diálogo Personalizado -->
+    <style name="CustomDialogTheme" parent="Theme.AppCompat.Dialog">
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+    </style>
+    xml
+    <!-- ================== TEMA PARA LA SPLASH SCREEN ================== -->
+    <!-- Este tema se aplicará ANTES de que la app se inicie por completo -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+
+        <!-- 1. El fondo de la splash screen (nuestro color oscuro) -->
+        <item name="windowSplashScreenBackground">#1C1B2B</item>
+
+        <!-- 2. El icono/logo que se mostrará en el centro -->
+        <!-- Reemplaza 'logo_app' con el nombre de tu logo en la carpeta drawable -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo_app</item>
+
+        <!-- Opcional: Define la duración de la animación del icono (ej: 1 segundo) -->
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+
+        <!-- 3. El tema al que se transicionará DESPUÉS de la splash screen -->
+        <!-- Debe ser el tema principal de tu aplicación -->
+        <item name="postSplashScreenTheme">@style/Theme.MyApplication</item>
+
+    </style>
+    <!-- ============================================================== -->
+
 </resources>

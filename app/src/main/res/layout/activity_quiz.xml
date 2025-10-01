@@ -4,79 +4,114 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    tools:context=".QuizActivity"
-    tools:ignore="ExtraText">
+    android:background="#1C1B2B"
+    android:padding="24dp"
+    tools:context=".QuizActivity">
 
     <TextView
         android:id="@+id/textViewPuntuacion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
         android:text="Puntuación: 0"
-        android:textSize="18sp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textColor="#FFC107"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/textViewPregunta"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardViewPregunta"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="Cargando pregunta..."
-        android:textSize="20sp"
-        android:gravity="center"
-        app:layout_constraintTop_toBottomOf="@id/textViewPuntuacion"
+        app:cardBackgroundColor="#0D47A1"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/textViewPuntuacion"
+        app:strokeColor="#42A5F5"
+        app:strokeWidth="1dp">
+        <TextView
+            android:id="@+id/textViewPregunta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-condensed-medium"
+            android:gravity="center"
+            android:minHeight="120dp"
+            android:padding="16dp"
+            android:text="Cargando pregunta..."
+            android:textAppearance="?attr/textAppearanceTitleLarge"
+            android:textColor="@android:color/white"
+            android:shadowColor="#000000"
+            android:shadowDy="2"
+            android:shadowRadius="4"/>
+    </com.google.android.material.card.MaterialCardView>
 
-    <RadioGroup
-        android:id="@+id/radioGroupOpciones"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+    <!-- Contenedor para los diferentes tipos de respuesta -->
+    <FrameLayout
+        android:id="@+id/containerRespuestas"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginTop="24dp"
-        android:visibility="gone"
-        tools:ignore="MissingConstraints" /> <!-- Inicialmente oculto, se muestra para preguntas de texto -->
-        app:layout_constraintTop_toBottomOf="@id/textViewPregunta"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintTop_toBottomOf="@id/cardViewPregunta"
+        app:layout_constraintBottom_toTopOf="@id/buttonConfirmarRespuesta"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <RadioButton
-            android:id="@+id/radioButtonOpcion1"
+        <!-- 1. Opciones con RadioButton (por defecto visible) -->
+        <RadioGroup
+            android:id="@+id/radioGroupOpciones"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Opción 1"
-            tools:ignore="MissingConstraints" />
+            android:visibility="gone">
+            <RadioButton android:id="@+id/radioButtonOpcion1" style="@style/QuizRadioButton" android:text="Opción 1"/>
+            <RadioButton android:id="@+id/radioButtonOpcion2" style="@style/QuizRadioButton" android:text="Opción 2"/>
+            <RadioButton android:id="@+id/radioButtonOpcion3" style="@style/QuizRadioButton" android:text="Opción 3"/>
+            <RadioButton android:id="@+id/radioButtonOpcion4" style="@style/QuizRadioButton" android:text="Opción 4"/>
+        </RadioGroup>
 
-        <RadioButton
-            android:id="@+id/radioButtonOpcion2"
+        <!-- 2. Opciones con Imágenes (RecyclerView) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewOpcionesImagen"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Opción 2"
-            tools:ignore="MissingConstraints" />
+            android:layout_height="match_parent"
+            android:visibility="gone" />
 
-        <RadioButton
-            android:id="@+id/radioButtonOpcion3"
+        <!-- 3. Opciones con ListView -->
+        <ListView
+            android:id="@+id/listViewOpciones"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Opción 3"
-            tools:ignore="MissingConstraints" />
+            android:layout_height="match_parent"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="8dp"
+            android:visibility="gone" />
 
-        <RadioButton
-            android:id="@+id/radioButtonOpcion4"
+        <!-- 4. Opciones con Spinner -->
+        <Spinner
+            android:id="@+id/spinnerOpciones"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Opción 4"
-            tools:ignore="MissingConstraints" />
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/spinner_background"
+            android:padding="16dp"
+            android:visibility="gone" />
+
+    </FrameLayout>
 
     <Button
         android:id="@+id/buttonConfirmarRespuesta"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Confirmar"
-        android:layout_marginTop="32dp"
-        app:layout_constraintTop_toBottomOf="@id/radioGroupOpciones"
-        tools:ignore="MissingConstraints" />
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        android:backgroundTint="#FFC107"
+        android:padding="16dp"
+        android:text="CONFIRMAR RESPUESTA"
+        android:textColor="#1C1B2B"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

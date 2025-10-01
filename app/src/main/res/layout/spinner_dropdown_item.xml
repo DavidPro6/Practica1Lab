@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Este layout define cómo se ve cada opción en la lista desplegable del Spinner.
+    Hereda del layout estándar de Android pero modifica colores y padding para
+    encajar con nuestra estética.
+-->
+<CheckedTextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/text1"
+    style="?android:attr/spinnerDropDownItemStyle"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/dropdownListPreferredItemHeight"
+    android:ellipsize="marquee"
+    android:singleLine="true"
+    android:textColor="@android:color/white"
+    android:background="#3A3853"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"/>

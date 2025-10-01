@@ -7,6 +7,7 @@ import android.widget.Button; // Importar Button
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;    import androidx.core.graphics.Insets;
+import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
@@ -16,18 +17,17 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main); // Tu layout principal
 
-        // Encontrar el botón por su ID
         buttonStartQuiz = findViewById(R.id.buttonStartQuiz);
 
-        // Configurar el OnClickListener
         buttonStartQuiz.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Crear un Intent para iniciar QuizActivity
+
                 Intent intent = new Intent(MainActivity.this, QuizActivity.class);
                 startActivity(intent);
             }

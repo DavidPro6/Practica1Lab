@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 1. Fondo del Spinner -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#2C2A45" />
+            <corners android:radius="12dp" />
+            <stroke android:width="1dp" android:color="#42A5F5" />
+        </shape>
+    </item>
+
+    <!-- 2. Flecha del Spinner (Usando el drawable directamente) -->
+    <!-- Se reemplaza la etiqueta <bitmap> por una referencia directa al drawable -->
+    <item
+        android:drawable="@drawable/ic_arrow_drop_down"
+        android:gravity="end|center_vertical"
+        android:right="16dp"
+        android:tint="@android:color/white"
+        android:width="24dp"
+        android:height="24dp" />
+
+</layer-list>
