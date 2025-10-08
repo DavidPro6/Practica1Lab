@@ -1,42 +1,38 @@
 package com.example.myapplication;
 
-import android.content.Intent; // Importar Intent
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.View; // Importar View
-import android.widget.Button; // Importar Button
 
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;    import androidx.core.graphics.Insets;
-import androidx.core.splashscreen.SplashScreen;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
-public class MainActivity extends AppCompatActivity {
+// 1. La Activity ahora implementa la interfaz del fragmento
+public class MainActivity extends AppCompatActivity implements BlankFragment.OnStartQuizListener {
 
-    Button buttonStartQuiz; // Declarar el botón
+    private MainViewModel mainViewModel;
+
+    private final ActivityResultLauncher<Intent> quizLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    int score = result.getData().getIntExtra("final_score", 0);
+                    mainViewModel.setFinalScore(score);
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main); // Tu layout principal
+        setContentView(R.layout.activity_main);
 
-        buttonStartQuiz = findViewById(R.id.buttonStartQuiz);
+        mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
-        buttonStartQuiz.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+    }
 
-                Intent intent = new Intent(MainActivity.this, QuizActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+    @Override
+    public void onStartQuiz() {
+        Intent intent = new Intent(MainActivity.this, QuizActivity.class);
+        quizLauncher.launch(intent);
     }
 }

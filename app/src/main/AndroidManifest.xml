@@ -10,7 +10,7 @@
         android:label="Mente de Hierro"
         android:roundIcon="@drawable/logo_app"
         android:supportsRtl="true"
-        android:theme="@style/Theme.App.Starting">
+        android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -24,7 +24,7 @@
         <activity
             android:name=".QuizActivity"
             android:exported="false"
-            android:theme="@style/Theme.MyApplication">
+            android:theme="@style/AppTheme">
         </activity>
 
     </application>

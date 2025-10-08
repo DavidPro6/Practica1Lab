@@ -51,21 +51,38 @@
 
 
     <!-- Botón para iniciar el quiz, anclado abajo -->
-    <Button
-        android:id="@+id/buttonStartQuiz"
-        android:layout_width="0dp"
+
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_start_quiz_container"
+        android:name="com.example.myapplication.BlankFragment"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="64dp"
-        android:backgroundTint="#FFC107"
-        android:padding="16dp"
-        android:text="INICIAR DESAFÍO"
-        android:textColor="#1C1B2B"
-        android:textSize="18sp"
-        android:textStyle="bold"
+        android:layout_weight="1"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:layout_marginBottom="32dp"
+        tools:ignore="MissingConstraints"
+        tools:layout="@layout/fragment_blank"
+        tools:layout_editor_absoluteX="205dp"
+        tools:layout_editor_absoluteY="578dp" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_score_container"
+        android:name="com.example.myapplication.ScoreFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        app:layout_constraintTop_toBottomOf="@id/textViewSubtitulo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp"
+        app:layout_constraintBottom_toTopOf="@id/fragment_start_quiz_container"
+        android:layout_marginBottom="32dp"
+        tools:ignore="MissingConstraints"
+        tools:layout="@layout/fragment_score"
+        tools:layout_editor_absoluteX="205dp"
+        tools:layout_editor_absoluteY="524dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

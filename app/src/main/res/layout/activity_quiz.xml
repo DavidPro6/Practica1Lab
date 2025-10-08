@@ -17,6 +17,7 @@
         android:textAppearance="?attr/textAppearanceTitleMedium"
         android:textColor="#FFC107"
         android:textStyle="bold"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -46,7 +47,8 @@
             android:textColor="@android:color/white"
             android:shadowColor="#000000"
             android:shadowDy="2"
-            android:shadowRadius="4"/>
+            android:shadowRadius="4"
+            android:textSize="20sp"/>
     </com.google.android.material.card.MaterialCardView>
 
     <!-- Contenedor para los diferentes tipos de respuesta -->

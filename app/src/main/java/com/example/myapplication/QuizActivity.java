@@ -1,5 +1,6 @@
 package com.example.myapplication;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;import android.view.View;
@@ -197,8 +198,14 @@ public class QuizActivity extends AppCompatActivity {
 
     private void avanzarPregunta() {
         preguntaActualIndex++;
-        mostrarPregunta();
+        if (preguntaActualIndex < listaDePreguntas.size()) {
+            mostrarPregunta();
+        } else {
+            // Cuando ya no hay más preguntas, llamas a finDelQuiz.
+            finDelQuiz();
+        }
     }
+
 
     private void mostrarDialogoDeFallo() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
@@ -248,9 +255,11 @@ public class QuizActivity extends AppCompatActivity {
 
 
 
+    // Dentro de QuizActivity.java
+
     private void finDelQuiz() {
         juegoTerminado = true;
-        ocultarTodosLosControles();
+        ocultarTodosLosControles(); // O el método que uses para ocultar las opciones
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom, null);
@@ -261,34 +270,41 @@ public class QuizActivity extends AppCompatActivity {
         Button buttonNegative = dialogView.findViewById(R.id.dialog_button_negative);
 
         dialogTitle.setText("¡Quiz Finalizado!");
-        dialogMessage.setText("Tu puntuación final es: " + puntuacion);
+        dialogMessage.setText("Tu puntuación final es: " + puntuacion); // Usando tu variable de puntuación
+
         buttonPositive.setText("Volver a Jugar");
-        buttonNegative.setText("Salir"); // Opción para salir
+        buttonNegative.setText("Salir");
 
         builder.setView(dialogView);
         final AlertDialog dialog = builder.create();
 
+        // Listener para el botón "Volver a Jugar"
         buttonPositive.setOnClickListener(v -> {
             dialog.dismiss();
-            reiniciarQuiz();
+            // IMPORTANTE: Devolvemos la puntuación antes de reiniciar el quiz internamente
+            devolverPuntuacionYFinalizar(puntuacion);
+            // Opcional: Si quieres que el quiz se reinicie la próxima vez que se abra, llama a tu método de reinicio
+            // reiniciarQuiz();
         });
 
+        // Listener para el botón "Salir"
         buttonNegative.setOnClickListener(v -> {
             dialog.dismiss();
-            finish(); // Cierra la actividad
+            // ¡AQUÍ ESTÁ LA MAGIA! Llamamos al método para devolver la puntuación y cerrar.
+            devolverPuntuacionYFinalizar(puntuacion);
         });
 
         dialog.setCancelable(false);
         dialog.show();
 
-
         if (dialog.getWindow() != null) {
             dialog.getWindow().setLayout(
                     (int) (getResources().getDisplayMetrics().widthPixels * 0.9), // 90% del ancho de la pantalla
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT // Altura se ajusta al contenido
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT // La altura se ajusta al contenido
             );
         }
     }
+
 
     private void reiniciarQuiz() {
         juegoTerminado = false;
@@ -477,4 +493,23 @@ public class QuizActivity extends AppCompatActivity {
                 Pregunta.TipoPregunta.TEXTO_SPINNER
         ));
     }
+
+    // Dentro de QuizActivity.java
+
+    private void devolverPuntuacionYFinalizar(int score) {
+        // 1. Crear un nuevo Intent para llevar el resultado.
+        Intent resultIntent = new Intent();
+
+        // 2. Poner la puntuación en el Intent. "final_score" es la clave
+        //    que MainActivity usará para recuperar el valor.
+        resultIntent.putExtra("final_score", score);
+
+        // 3. Establecer el resultado de la actividad como "OK" y adjuntar el Intent con los datos.
+        setResult(RESULT_OK, resultIntent);
+
+        // 4. Cerrar esta actividad (QuizActivity) y volver a la anterior (MainActivity).
+        finish();
+    }
+
+
 }

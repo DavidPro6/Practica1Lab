@@ -6,6 +6,7 @@
     android:textAppearance="?attr/textAppearanceBodyLarge"
     android:textColor="@color/list_item_text_color_selector"
     android:textStyle="bold"
+    android:textSize="18sp"
     android:background="@drawable/list_item_selector"
     android:gravity="center"
     android:paddingStart="24dp"
