@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#2C2A45"/>
-    <corners android:radius="24dp"/>
+
+    <!-- Color de fondo del diálogo. Un color oscuro que combina con tu app. -->
+    <solid android:color="#2C2A4A" />
+
+    <!-- Bordes redondeados para el diálogo. -->
+    <corners android:radius="16dp" />
+
+    <!-- Un borde o contorno de color azul para que destaque. -->
     <stroke
-        android:width="1dp"
-        android:color="#FFC107"/>
+        android:width="2dp"
+        android:color="#42A5F5" />
+
 </shape>

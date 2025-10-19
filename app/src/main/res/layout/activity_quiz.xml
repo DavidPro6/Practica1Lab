@@ -16,8 +16,8 @@
         android:text="Puntuación: 0"
         android:textAppearance="?attr/textAppearanceTitleMedium"
         android:textColor="#FFC107"
-        android:textStyle="bold"
         android:textSize="18sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -34,6 +34,7 @@
         app:layout_constraintTop_toBottomOf="@id/textViewPuntuacion"
         app:strokeColor="#42A5F5"
         app:strokeWidth="1dp">
+
         <TextView
             android:id="@+id/textViewPregunta"
             android:layout_width="match_parent"
@@ -49,21 +50,36 @@
             android:shadowDy="2"
             android:shadowRadius="4"
             android:textSize="20sp"/>
+
     </com.google.android.material.card.MaterialCardView>
+
+    <!-- ImageView para la imagen de la pregunta (si la hay) -->
+    <ImageView
+        android:id="@+id/imageViewPregunta"
+        android:layout_width="0dp"
+        android:layout_height="180dp"
+        android:layout_marginTop="16dp"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cardViewPregunta"
+        tools:src="@tools:sample/avatars"
+        tools:visibility="visible"/>
 
     <!-- Contenedor para los diferentes tipos de respuesta -->
     <FrameLayout
         android:id="@+id/containerRespuestas"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        app:layout_constraintTop_toBottomOf="@id/cardViewPregunta"
         app:layout_constraintBottom_toTopOf="@id/buttonConfirmarRespuesta"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/imageViewPregunta">
 
-        <!-- 1. Opciones con RadioButton (por defecto visible) -->
+        <!-- 1. Opciones con RadioButton -->
         <RadioGroup
             android:id="@+id/radioGroupOpciones"
             android:layout_width="match_parent"
@@ -101,6 +117,8 @@
             android:padding="16dp"
             android:visibility="gone" />
 
+        <!-- El layout para imagen y texto libre ya no es necesario aquí -->
+
     </FrameLayout>
 
     <Button
@@ -116,4 +134,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,15 +3,16 @@ package com.example.myapplication;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;import android.view.View;
+import android.os.Looper;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView; // Importante añadir ImageView
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,18 +33,23 @@ public class QuizActivity extends AppCompatActivity {
     private TextView textViewPuntuacion, textViewPregunta;
     private Button buttonConfirmarRespuesta;
 
+    // Vistas para los tipos de respuesta
     private RadioGroup radioGroupOpciones;
     private RecyclerView recyclerViewOpcionesImagen;
     private ListView listViewOpciones;
     private Spinner spinnerOpciones;
+
+    // Vista para la imagen de la pregunta
+    private ImageView imageViewPregunta;
 
     private List<RadioButton> radioButtons;
 
     private List<Pregunta> listaDePreguntas;
     private int preguntaActualIndex = 0;
     private int puntuacion = 0;
-    private boolean juegoTerminado = false; // Variable de estado
+    private boolean juegoTerminado = false;
 
+    // Adapters
     private RespuestasAdapter respuestasAdapter;
     private ArrayAdapter<String> listViewAdapter;
     private ArrayAdapter<String> spinnerAdapter;
@@ -54,12 +60,12 @@ public class QuizActivity extends AppCompatActivity {
         setContentView(R.layout.activity_quiz);
 
         inicializarVistas();
-        crearPreguntasDeEjemplo();
+        crearPreguntas();
         mostrarPregunta();
 
         buttonConfirmarRespuesta.setOnClickListener(v -> {
             if (juegoTerminado) {
-                reiniciarQuiz();
+                devolverPuntuacionYFinalizar(puntuacion);
             } else {
                 comprobarRespuesta();
             }
@@ -71,10 +77,14 @@ public class QuizActivity extends AppCompatActivity {
         textViewPregunta = findViewById(R.id.textViewPregunta);
         buttonConfirmarRespuesta = findViewById(R.id.buttonConfirmarRespuesta);
 
+        // Vistas de respuesta
         radioGroupOpciones = findViewById(R.id.radioGroupOpciones);
         recyclerViewOpcionesImagen = findViewById(R.id.recyclerViewOpcionesImagen);
         listViewOpciones = findViewById(R.id.listViewOpciones);
         spinnerOpciones = findViewById(R.id.spinnerOpciones);
+
+        // Vista de imagen de pregunta
+        imageViewPregunta = findViewById(R.id.imageViewPregunta);
 
         radioButtons = new ArrayList<>();
         radioButtons.add(findViewById(R.id.radioButtonOpcion1));
@@ -98,6 +108,14 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void configurarControlesParaPregunta(Pregunta pregunta) {
+        // Mostrar la imagen de la pregunta si existe
+        if (pregunta.getImagenPreguntaId() != 0) {
+            imageViewPregunta.setImageResource(pregunta.getImagenPreguntaId());
+            imageViewPregunta.setVisibility(View.VISIBLE);
+        } else {
+            imageViewPregunta.setVisibility(View.GONE);
+        }
+
         try {
             switch (pregunta.getTipo()) {
                 case TEXTO_RADIOBUTTON:
@@ -137,7 +155,7 @@ public class QuizActivity extends AppCompatActivity {
                             .map(Respuesta::getTextoRespuesta)
                             .collect(Collectors.toList());
                     spinnerAdapter = new ArrayAdapter<>(this, R.layout.spinner_item_layout, opcionesSpinner);
-                    spinnerAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item); // Usando layout personalizado
+                    spinnerAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
                     spinnerOpciones.setAdapter(spinnerAdapter);
                     break;
             }
@@ -148,7 +166,6 @@ public class QuizActivity extends AppCompatActivity {
 
     private void comprobarRespuesta() {
         buttonConfirmarRespuesta.setEnabled(false);
-
         Pregunta preguntaActual = listaDePreguntas.get(preguntaActualIndex);
         int respuestaSeleccionadaIndex = -1;
 
@@ -174,92 +191,123 @@ public class QuizActivity extends AppCompatActivity {
         }
 
         if (respuestaSeleccionadaIndex == -1) {
-            // ===== ¡AQUÍ ESTÁ LA MODIFICACIÓN! =====
-            // En lugar de un Toast, llamamos a nuestro nuevo diálogo.
             mostrarDialogoSinRespuesta();
-            // ======================================
             buttonConfirmarRespuesta.setEnabled(true);
             return;
         }
 
+        // --- ¡AQUÍ ESTÁ LA NUEVA LÓGICA DE PUNTUACIÓN! ---
         if (respuestaSeleccionadaIndex == preguntaActual.getRespuestaCorrectaIndex()) {
-            // ===== ¡AQUÍ ESTÁ LA MODIFICACIÓN! =====
-            puntuacion++;
-            textViewPuntuacion.setText("Puntuación: " + puntuacion);
-
-            // En lugar de un Toast y un Handler, llamamos a nuestro nuevo diálogo.
+            // Si la respuesta es correcta, suma 1 punto.
+            puntuacion++; // Cambiado de puntuacion += 10 a puntuacion++
             mostrarDialogoDeAcierto();
-            // ======================================
         } else {
-            // Si la respuesta es incorrecta, mostramos el diálogo de fallo.
+            // Si la respuesta es incorrecta, resta 2 puntos.
+            puntuacion -= 2;
             mostrarDialogoDeFallo();
         }
+
+        // Actualiza el texto de la puntuación en la pantalla.
+        textViewPuntuacion.setText("Puntuación: " + puntuacion);
+        // --- FIN DE LA LÓGICA DE PUNTUACIÓN ---
     }
+
 
     private void avanzarPregunta() {
         preguntaActualIndex++;
         if (preguntaActualIndex < listaDePreguntas.size()) {
             mostrarPregunta();
         } else {
-            // Cuando ya no hay más preguntas, llamas a finDelQuiz.
             finDelQuiz();
         }
     }
 
-
-    private void mostrarDialogoDeFallo() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom, null);
-
-        TextView dialogTitle = dialogView.findViewById(R.id.dialog_title);
-        TextView dialogMessage = dialogView.findViewById(R.id.dialog_message);
-        Button buttonPositive = dialogView.findViewById(R.id.dialog_button_positive);
-        Button buttonNegative = dialogView.findViewById(R.id.dialog_button_negative);
-
-        dialogTitle.setText("¡Respuesta Incorrecta!");
-        dialogMessage.setText("Has fallado. ¿Qué te gustaría hacer?");
-
-        builder.setView(dialogView);
-        final AlertDialog dialog = builder.create();
-
-        buttonPositive.setText("Continuar");
-        buttonPositive.setOnClickListener(v -> {
-            dialog.dismiss();
-            avanzarPregunta();
-        });
-
-        buttonNegative.setText("Reiniciar Test");
-        buttonNegative.setOnClickListener(v -> {
-            dialog.dismiss();
-            reiniciarQuiz();
-        });
-
-        dialog.setCancelable(false);
-        dialog.show();
-
-
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setLayout(
-                    (int) (getResources().getDisplayMetrics().widthPixels * 0.9), // 90% del ancho de la pantalla
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT // Altura se ajusta al contenido
-            );
-        }
-    }
-
     private void ocultarTodosLosControles() {
+        // Ocultar todas las vistas de respuesta
         radioGroupOpciones.setVisibility(View.GONE);
         recyclerViewOpcionesImagen.setVisibility(View.GONE);
         listViewOpciones.setVisibility(View.GONE);
         spinnerOpciones.setVisibility(View.GONE);
+        // Y también ocultar la imagen de la pregunta por defecto
+        imageViewPregunta.setVisibility(View.GONE);
     }
 
+    private void crearPreguntas() {
+        listaDePreguntas = new ArrayList<>();
 
+        // Pregunta 1: Texto con RadioButtons
+        listaDePreguntas.add(new Pregunta(
+                "¿Qué ejercicio se enfoca principalmente en los pectorales?",
+                Arrays.asList(
+                        new Respuesta("Sentadilla"),
+                        new Respuesta("Press de banca"), // Correcta
+                        new Respuesta("Peso muerto"),
+                        new Respuesta("Curl de bíceps")
+                ),
+                1,
+                Pregunta.TipoPregunta.TEXTO_RADIOBUTTON
+        ));
 
-    // Dentro de QuizActivity.java
+        // Pregunta 2: Texto con Opciones de Imagen
+        listaDePreguntas.add(new Pregunta(
+                "¿Cuál de estas imágenes muestra una 'dominada' (pull-up)?",
+                Arrays.asList(
+                        new Respuesta(R.drawable.sentadilla_img),
+                        new Respuesta(R.drawable.press_banca_img),
+                        new Respuesta(R.drawable.dominada_img), // Correcta
+                        new Respuesta(R.drawable.curl_biceps_img)
+                ),
+                2,
+                Pregunta.TipoPregunta.IMAGEN_GRID
+        ));
+
+        // Pregunta 3: Texto con ListView
+        listaDePreguntas.add(new Pregunta(
+                "¿Cuál de los siguientes es un macronutriente?",
+                Arrays.asList(
+                        new Respuesta("Vitamina C"),
+                        new Respuesta("Calcio"),
+                        new Respuesta("Proteína"), // Correcta
+                        new Respuesta("Hierro"),
+                        new Respuesta("Magnesio")
+                ),
+                2,
+                Pregunta.TipoPregunta.TEXTO_LISTVIEW
+        ));
+
+        // Pregunta 4: Texto con Spinner
+        listaDePreguntas.add(new Pregunta(
+                "Para hipertrofia, el rango de repeticiones más común es...",
+                Arrays.asList(
+                        new Respuesta("1-5"),
+                        new Respuesta("6-12"), // Correcta
+                        new Respuesta("15-20"),
+                        new Respuesta("Más de 25")
+                ),
+                1,
+                Pregunta.TipoPregunta.TEXTO_SPINNER
+        ));
+
+        // Pregunta 5: Imagen con Opciones de Texto (RadioButtons)
+        listaDePreguntas.add(new Pregunta(
+                "¿Qué ejercicio se muestra en la imagen?", // Enunciado
+                Arrays.asList(
+                        new Respuesta("Press de banca"),
+                        new Respuesta("Peso muerto"),
+                        new Respuesta("Sentadilla"), // Respuesta Correcta
+                        new Respuesta("Remo con barra")
+                ),
+                2, // Índice de la respuesta correcta ("Sentadilla")
+                Pregunta.TipoPregunta.TEXTO_RADIOBUTTON,
+                R.drawable.sentadilla_img // ID de la imagen a mostrar
+        ));
+    }
+
+    // --- EL RESTO DE MÉTODOS (DIÁLOGOS, REINICIO, ETC.) NO NECESITAN CAMBIOS ---
 
     private void finDelQuiz() {
         juegoTerminado = true;
-        ocultarTodosLosControles(); // O el método que uses para ocultar las opciones
+        ocultarTodosLosControles();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom, null);
@@ -270,7 +318,7 @@ public class QuizActivity extends AppCompatActivity {
         Button buttonNegative = dialogView.findViewById(R.id.dialog_button_negative);
 
         dialogTitle.setText("¡Quiz Finalizado!");
-        dialogMessage.setText("Tu puntuación final es: " + puntuacion); // Usando tu variable de puntuación
+        dialogMessage.setText("Tu puntuación final es: " + puntuacion);
 
         buttonPositive.setText("Volver a Jugar");
         buttonNegative.setText("Salir");
@@ -278,19 +326,13 @@ public class QuizActivity extends AppCompatActivity {
         builder.setView(dialogView);
         final AlertDialog dialog = builder.create();
 
-        // Listener para el botón "Volver a Jugar"
         buttonPositive.setOnClickListener(v -> {
             dialog.dismiss();
-            // IMPORTANTE: Devolvemos la puntuación antes de reiniciar el quiz internamente
             devolverPuntuacionYFinalizar(puntuacion);
-            // Opcional: Si quieres que el quiz se reinicie la próxima vez que se abra, llama a tu método de reinicio
-            // reiniciarQuiz();
         });
 
-        // Listener para el botón "Salir"
         buttonNegative.setOnClickListener(v -> {
             dialog.dismiss();
-            // ¡AQUÍ ESTÁ LA MAGIA! Llamamos al método para devolver la puntuación y cerrar.
             devolverPuntuacionYFinalizar(puntuacion);
         });
 
@@ -299,12 +341,11 @@ public class QuizActivity extends AppCompatActivity {
 
         if (dialog.getWindow() != null) {
             dialog.getWindow().setLayout(
-                    (int) (getResources().getDisplayMetrics().widthPixels * 0.9), // 90% del ancho de la pantalla
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT // La altura se ajusta al contenido
+                    (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
             );
         }
     }
-
 
     private void reiniciarQuiz() {
         juegoTerminado = false;
@@ -312,6 +353,13 @@ public class QuizActivity extends AppCompatActivity {
         puntuacion = 0;
         textViewPuntuacion.setText("Puntuación: 0");
         mostrarPregunta();
+    }
+
+    private void devolverPuntuacionYFinalizar(int score) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("final_score", score);
+        setResult(RESULT_OK, resultIntent);
+        finish();
     }
 
     private void mostrarDialogoDeError(String title, String message) {
@@ -347,14 +395,12 @@ public class QuizActivity extends AppCompatActivity {
 
         if (dialog.getWindow() != null) {
             dialog.getWindow().setLayout(
-                    (int) (getResources().getDisplayMetrics().widthPixels * 0.9), // 90% del ancho de la pantalla
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT // Altura se ajusta al contenido
+                    (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
             );
         }
     }
-    /**
-     * Muestra un diálogo PERSONALIZADO cuando el usuario no ha seleccionado ninguna respuesta.
-     */
+
     private void mostrarDialogoSinRespuesta() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom, null);
@@ -364,24 +410,18 @@ public class QuizActivity extends AppCompatActivity {
         Button buttonPositive = dialogView.findViewById(R.id.dialog_button_positive);
         Button buttonNegative = dialogView.findViewById(R.id.dialog_button_negative);
 
-        // Configurar el contenido para este caso
         dialogTitle.setText("¡Atención!");
         dialogMessage.setText("Por favor, selecciona una respuesta para continuar.");
-
-        // Usaremos solo un botón para cerrar el diálogo
         buttonPositive.setText("Entendido");
-        buttonNegative.setVisibility(View.GONE); // Ocultamos el segundo botón
+        buttonNegative.setVisibility(View.GONE);
 
         builder.setView(dialogView);
         final AlertDialog dialog = builder.create();
 
-        // El botón "Entendido" simplemente cierra el diálogo
         buttonPositive.setOnClickListener(v -> dialog.dismiss());
-
         dialog.setCancelable(false);
         dialog.show();
 
-        // Ajustar el tamaño
         if (dialog.getWindow() != null) {
             dialog.getWindow().setLayout(
                     (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
@@ -390,40 +430,26 @@ public class QuizActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Muestra un diálogo PERSONALIZADO cuando el usuario acierta una pregunta.
-     * El diálogo se cierra automáticamente después de un breve período.
-     */
     private void mostrarDialogoDeAcierto() {
-        // 1. Crear el Builder con nuestro tema personalizado
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
-
-        // 2. Inflar la vista personalizada
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom, null);
 
-        // 3. Obtener referencias a los elementos del layout
         TextView dialogTitle = dialogView.findViewById(R.id.dialog_title);
         TextView dialogMessage = dialogView.findViewById(R.id.dialog_message);
         Button buttonPositive = dialogView.findViewById(R.id.dialog_button_positive);
         Button buttonNegative = dialogView.findViewById(R.id.dialog_button_negative);
 
-        // 4. Configurar el contenido para el acierto
         dialogTitle.setText("¡Correcto!");
         dialogTitle.setTextColor(android.graphics.Color.parseColor("#FFC107"));
         dialogMessage.setText("¡Sigue así!");
-
-        // Ocultamos los botones, ya que el diálogo se cerrará solo
         buttonPositive.setVisibility(View.GONE);
         buttonNegative.setVisibility(View.GONE);
 
         builder.setView(dialogView);
-
-        // 5. Crear y mostrar el AlertDialog
         final AlertDialog dialog = builder.create();
         dialog.setCancelable(false);
         dialog.show();
 
-        // Ajustamos el tamaño
         if (dialog.getWindow() != null) {
             dialog.getWindow().setLayout(
                     (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
@@ -431,85 +457,48 @@ public class QuizActivity extends AppCompatActivity {
             );
         }
 
-        // 6. Programar el cierre del diálogo y el avance a la siguiente pregunta
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             if (dialog.isShowing()) {
                 dialog.dismiss();
             }
-            avanzarPregunta(); // Avanzamos a la siguiente pregunta
-        }, 1500); // 1.5 segundos
+            avanzarPregunta();
+        }, 1500);
     }
 
+    private void mostrarDialogoDeFallo() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom, null);
 
-    private void crearPreguntasDeEjemplo() {
-        listaDePreguntas = new ArrayList<>();
+        TextView dialogTitle = dialogView.findViewById(R.id.dialog_title);
+        TextView dialogMessage = dialogView.findViewById(R.id.dialog_message);
+        Button buttonPositive = dialogView.findViewById(R.id.dialog_button_positive);
+        Button buttonNegative = dialogView.findViewById(R.id.dialog_button_negative);
 
-        listaDePreguntas.add(new Pregunta(
-                "¿Qué ejercicio se enfoca principalmente en los pectorales?",
-                Arrays.asList(
-                        new Respuesta("Sentadilla"),
-                        new Respuesta("Press de banca"), // Correcta
-                        new Respuesta("Peso muerto"),
-                        new Respuesta("Curl de bíceps")
-                ),
-                1,
-                Pregunta.TipoPregunta.TEXTO_RADIOBUTTON
-        ));
+        dialogTitle.setText("¡Respuesta Incorrecta!");
+        dialogMessage.setText("Has fallado. ¿Qué te gustaría hacer?");
+        builder.setView(dialogView);
+        final AlertDialog dialog = builder.create();
 
-        listaDePreguntas.add(new Pregunta(
-                "¿Cuál de estas imágenes muestra una 'dominada' (pull-up)?",
-                Arrays.asList(
-                        new Respuesta(R.drawable.sentadilla_img),
-                        new Respuesta(R.drawable.press_banca_img),
-                        new Respuesta(R.drawable.dominada_img), // Correcta
-                        new Respuesta(R.drawable.curl_biceps_img)
-                ),
-                2,
-                Pregunta.TipoPregunta.IMAGEN_GRID
-        ));
+        buttonPositive.setText("Continuar");
+        buttonPositive.setOnClickListener(v -> {
+            dialog.dismiss();
+            avanzarPregunta();
+        });
 
-        listaDePreguntas.add(new Pregunta(
-                "¿Cuál de los siguientes es un macronutriente?",
-                Arrays.asList(
-                        new Respuesta("Vitamina C"),
-                        new Respuesta("Calcio"),
-                        new Respuesta("Proteína"), // Correcta
-                        new Respuesta("Hierro"),
-                        new Respuesta("Magnesio")
-                ),
-                2,
-                Pregunta.TipoPregunta.TEXTO_LISTVIEW
-        ));
+        buttonNegative.setText("Reiniciar Test");
+        buttonNegative.setOnClickListener(v -> {
+            dialog.dismiss();
+            reiniciarQuiz();
+        });
 
-        listaDePreguntas.add(new Pregunta(
-                "Para hipertrofia, el rango de repeticiones más común es...",
-                Arrays.asList(
-                        new Respuesta("1-5"),
-                        new Respuesta("6-12"), // Correcta
-                        new Respuesta("15-20"),
-                        new Respuesta("Más de 25")
-                ),
-                1,
-                Pregunta.TipoPregunta.TEXTO_SPINNER
-        ));
+        dialog.setCancelable(false);
+        dialog.show();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setLayout(
+                    (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+        }
     }
-
-    // Dentro de QuizActivity.java
-
-    private void devolverPuntuacionYFinalizar(int score) {
-        // 1. Crear un nuevo Intent para llevar el resultado.
-        Intent resultIntent = new Intent();
-
-        // 2. Poner la puntuación en el Intent. "final_score" es la clave
-        //    que MainActivity usará para recuperar el valor.
-        resultIntent.putExtra("final_score", score);
-
-        // 3. Establecer el resultado de la actividad como "OK" y adjuntar el Intent con los datos.
-        setResult(RESULT_OK, resultIntent);
-
-        // 4. Cerrar esta actividad (QuizActivity) y volver a la anterior (MainActivity).
-        finish();
-    }
-
-
 }

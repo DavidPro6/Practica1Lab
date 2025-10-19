@@ -44,7 +44,6 @@
         <!-- 3. El tema al que se transicionará DESPUÉS de la splash screen -->
         <!-- Debe ser el tema principal de tu aplicación -->
         <item name="postSplashScreenTheme">@style/Theme.MyApplication</item>
-
     </style>
     <!-- ============================================================== -->
 
