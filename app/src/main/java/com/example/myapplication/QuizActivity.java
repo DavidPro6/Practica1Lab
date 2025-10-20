@@ -199,7 +199,7 @@ public class QuizActivity extends AppCompatActivity {
         // --- ¡AQUÍ ESTÁ LA NUEVA LÓGICA DE PUNTUACIÓN! ---
         if (respuestaSeleccionadaIndex == preguntaActual.getRespuestaCorrectaIndex()) {
             // Si la respuesta es correcta, suma 1 punto.
-            puntuacion++; // Cambiado de puntuacion += 10 a puntuacion++
+            puntuacion+=3; // Cambiado de puntuacion += 10 a puntuacion++
             mostrarDialogoDeAcierto();
         } else {
             // Si la respuesta es incorrecta, resta 2 puntos.
