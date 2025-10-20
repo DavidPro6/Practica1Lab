@@ -19,7 +19,7 @@ public class RespuestasAdapter extends RecyclerView.Adapter<RespuestasAdapter.Re
 
     private final List<Respuesta> opciones;
     private final LayoutInflater inflater;
-    private int selectedPosition = RecyclerView.NO_POSITION; // -1, no hay nada seleccionado al inicio
+    private int selectedPosition = RecyclerView.NO_POSITION;
 
     public interface OnItemClickListener {
         void onItemClick(int position);
@@ -49,12 +49,12 @@ public class RespuestasAdapter extends RecyclerView.Adapter<RespuestasAdapter.Re
 
         if (position == selectedPosition) {
 
-            holder.cardView.setStrokeColor(Color.parseColor("#FFC107")); // Dorado
-            holder.cardView.setStrokeWidth(8); // Un borde más notable
+            holder.cardView.setStrokeColor(Color.parseColor("#FFC107"));
+            holder.cardView.setStrokeWidth(8);
         } else {
 
             holder.cardView.setStrokeColor(Color.TRANSPARENT);
-            holder.cardView.setStrokeWidth(2); // Devolvemos al grosor por defecto
+            holder.cardView.setStrokeWidth(2);
         }
 
 
@@ -65,9 +65,9 @@ public class RespuestasAdapter extends RecyclerView.Adapter<RespuestasAdapter.Re
             selectedPosition = holder.getAdapterPosition();
 
             if (previousSelectedPosition != -1) {
-                notifyItemChanged(previousSelectedPosition); // Deseleccionar el antiguo
+                notifyItemChanged(previousSelectedPosition);
             }
-            notifyItemChanged(selectedPosition); // Seleccionar el nuevo
+            notifyItemChanged(selectedPosition);
 
             listener.onItemClick(selectedPosition);
         });

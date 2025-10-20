@@ -69,7 +69,6 @@ public class ScoreFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_score, container, false);
     }
 
@@ -78,10 +77,8 @@ public class ScoreFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         textViewFinalScore = view.findViewById(R.id.textViewFinalScore);
 
-        // Obtener el ViewModel compartido, cuyo scope es la Activity
         mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
-        // Observar el LiveData de la puntuación
         mainViewModel.getFinalScore().observe(getViewLifecycleOwner(), score -> {
             if (score != null) {
                 textViewFinalScore.setText("Puntuación Final: " + score);

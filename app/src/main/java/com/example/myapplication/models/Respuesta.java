@@ -2,16 +2,16 @@ package com.example.myapplication.models;
 
 public class Respuesta {
     private String textoRespuesta;
-    private int imagenRespuestaId; // ID de un recurso drawable (ej: R.drawable.mi_imagen)
+    private int imagenRespuestaId;
 
     public Respuesta(String textoRespuesta) {
         this.textoRespuesta = textoRespuesta;
-        this.imagenRespuestaId = 0; // 0 indica que no hay imagen
+        this.imagenRespuestaId = 0;
     }
 
     public Respuesta(int imagenRespuestaId) {
         this.imagenRespuestaId = imagenRespuestaId;
-        this.textoRespuesta = null; // null indica que no hay texto
+        this.textoRespuesta = null;
     }
 
     public String getTextoRespuesta() { return textoRespuesta; }

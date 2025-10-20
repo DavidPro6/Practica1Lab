@@ -7,7 +7,7 @@ import android.os.Looper;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageView; // Importante añadir ImageView
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -33,13 +33,11 @@ public class QuizActivity extends AppCompatActivity {
     private TextView textViewPuntuacion, textViewPregunta;
     private Button buttonConfirmarRespuesta;
 
-    // Vistas para los tipos de respuesta
     private RadioGroup radioGroupOpciones;
     private RecyclerView recyclerViewOpcionesImagen;
     private ListView listViewOpciones;
     private Spinner spinnerOpciones;
 
-    // Vista para la imagen de la pregunta
     private ImageView imageViewPregunta;
 
     private List<RadioButton> radioButtons;
@@ -108,7 +106,6 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void configurarControlesParaPregunta(Pregunta pregunta) {
-        // Mostrar la imagen de la pregunta si existe
         if (pregunta.getImagenPreguntaId() != 0) {
             imageViewPregunta.setImageResource(pregunta.getImagenPreguntaId());
             imageViewPregunta.setVisibility(View.VISIBLE);
@@ -196,20 +193,15 @@ public class QuizActivity extends AppCompatActivity {
             return;
         }
 
-        // --- ¡AQUÍ ESTÁ LA NUEVA LÓGICA DE PUNTUACIÓN! ---
         if (respuestaSeleccionadaIndex == preguntaActual.getRespuestaCorrectaIndex()) {
-            // Si la respuesta es correcta, suma 1 punto.
-            puntuacion+=3; // Cambiado de puntuacion += 10 a puntuacion++
+            puntuacion+=3;
             mostrarDialogoDeAcierto();
         } else {
-            // Si la respuesta es incorrecta, resta 2 puntos.
             puntuacion -= 2;
             mostrarDialogoDeFallo();
         }
 
-        // Actualiza el texto de la puntuación en la pantalla.
         textViewPuntuacion.setText("Puntuación: " + puntuacion);
-        // --- FIN DE LA LÓGICA DE PUNTUACIÓN ---
     }
 
 
@@ -223,19 +215,16 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void ocultarTodosLosControles() {
-        // Ocultar todas las vistas de respuesta
         radioGroupOpciones.setVisibility(View.GONE);
         recyclerViewOpcionesImagen.setVisibility(View.GONE);
         listViewOpciones.setVisibility(View.GONE);
         spinnerOpciones.setVisibility(View.GONE);
-        // Y también ocultar la imagen de la pregunta por defecto
         imageViewPregunta.setVisibility(View.GONE);
     }
 
     private void crearPreguntas() {
         listaDePreguntas = new ArrayList<>();
 
-        // Pregunta 1: Texto con RadioButtons
         listaDePreguntas.add(new Pregunta(
                 "¿Qué ejercicio se enfoca principalmente en los pectorales?",
                 Arrays.asList(
@@ -248,7 +237,6 @@ public class QuizActivity extends AppCompatActivity {
                 Pregunta.TipoPregunta.TEXTO_RADIOBUTTON
         ));
 
-        // Pregunta 2: Texto con Opciones de Imagen
         listaDePreguntas.add(new Pregunta(
                 "¿Cuál de estas imágenes muestra una 'dominada' (pull-up)?",
                 Arrays.asList(
@@ -261,7 +249,6 @@ public class QuizActivity extends AppCompatActivity {
                 Pregunta.TipoPregunta.IMAGEN_GRID
         ));
 
-        // Pregunta 3: Texto con ListView
         listaDePreguntas.add(new Pregunta(
                 "¿Cuál de los siguientes es un macronutriente?",
                 Arrays.asList(
@@ -269,13 +256,19 @@ public class QuizActivity extends AppCompatActivity {
                         new Respuesta("Calcio"),
                         new Respuesta("Proteína"), // Correcta
                         new Respuesta("Hierro"),
-                        new Respuesta("Magnesio")
+                        new Respuesta("Magnesio"),
+                        new Respuesta("Yeso"),
+                        new Respuesta("Glutamato Monosódico"),
+                        new Respuesta("Tomate"),
+                        new Respuesta("Iphone 17"),
+                        new Respuesta("Luz RGB"),
+                        new Respuesta("Hormigón")
+
                 ),
                 2,
                 Pregunta.TipoPregunta.TEXTO_LISTVIEW
         ));
 
-        // Pregunta 4: Texto con Spinner
         listaDePreguntas.add(new Pregunta(
                 "Para hipertrofia, el rango de repeticiones más común es...",
                 Arrays.asList(
@@ -288,22 +281,20 @@ public class QuizActivity extends AppCompatActivity {
                 Pregunta.TipoPregunta.TEXTO_SPINNER
         ));
 
-        // Pregunta 5: Imagen con Opciones de Texto (RadioButtons)
         listaDePreguntas.add(new Pregunta(
-                "¿Qué ejercicio se muestra en la imagen?", // Enunciado
+                "¿Qué ejercicio se muestra en la imagen?",
                 Arrays.asList(
                         new Respuesta("Press de banca"),
                         new Respuesta("Peso muerto"),
                         new Respuesta("Sentadilla"), // Respuesta Correcta
                         new Respuesta("Remo con barra")
                 ),
-                2, // Índice de la respuesta correcta ("Sentadilla")
+                2,
                 Pregunta.TipoPregunta.TEXTO_RADIOBUTTON,
-                R.drawable.sentadilla_img // ID de la imagen a mostrar
+                R.drawable.sentadilla_img
         ));
     }
 
-    // --- EL RESTO DE MÉTODOS (DIÁLOGOS, REINICIO, ETC.) NO NECESITAN CAMBIOS ---
 
     private void finDelQuiz() {
         juegoTerminado = true;

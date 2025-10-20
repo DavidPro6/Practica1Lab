@@ -7,7 +7,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-// 1. La Activity ahora implementa la interfaz del fragmento
 public class MainActivity extends AppCompatActivity implements BlankFragment.OnStartQuizListener {
 
     private MainViewModel mainViewModel;

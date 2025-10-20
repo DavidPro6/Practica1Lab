@@ -7,7 +7,7 @@ public class Pregunta {
     private List<Respuesta> opciones;
     private int respuestaCorrectaIndex;
     private TipoPregunta tipo;
-    private int imagenPreguntaId; // NUEVO: Para la imagen de la pregunta
+    private int imagenPreguntaId;
 
     public enum TipoPregunta {
         TEXTO_RADIOBUTTON,
@@ -17,24 +17,21 @@ public class Pregunta {
         // Ya no necesitamos IMAGEN_TEXTO_LIBRE
     }
 
-    // Constructor principal
+
     public Pregunta(String textoPregunta, List<Respuesta> opciones, int respuestaCorrectaIndex, TipoPregunta tipo) {
-        this(textoPregunta, opciones, respuestaCorrectaIndex, tipo, 0); // Llama al otro constructor sin imagen
+        this(textoPregunta, opciones, respuestaCorrectaIndex, tipo, 0);
     }
 
-    // NUEVO: Constructor con imagen de pregunta
     public Pregunta(String textoPregunta, List<Respuesta> opciones, int respuestaCorrectaIndex, TipoPregunta tipo, int imagenPreguntaId) {
         this.textoPregunta = textoPregunta;
         this.opciones = opciones;
         this.respuestaCorrectaIndex = respuestaCorrectaIndex;
         this.tipo = tipo;
-        this.imagenPreguntaId = imagenPreguntaId; // Asignamos la imagen
+        this.imagenPreguntaId = imagenPreguntaId;
     }
-
-    // Getters
     public String getTextoPregunta() { return textoPregunta; }
     public List<Respuesta> getOpciones() { return opciones; }
     public int getRespuestaCorrectaIndex() { return respuestaCorrectaIndex; }
     public TipoPregunta getTipo() { return tipo; }
-    public int getImagenPreguntaId() { return imagenPreguntaId; } // NUEVO GETTER
+    public int getImagenPreguntaId() { return imagenPreguntaId; }
 }
