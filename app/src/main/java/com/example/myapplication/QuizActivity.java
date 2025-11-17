@@ -7,12 +7,13 @@ import android.os.Looper;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageView; // Importante añadir ImageView
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,11 +21,13 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.myapplication.adapter.RespuestasAdapter;
+import com.example.myapplication.database.QuizDbHelper;
 import com.example.myapplication.models.Pregunta;
 import com.example.myapplication.models.Respuesta;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,7 +63,45 @@ public class QuizActivity extends AppCompatActivity {
         setContentView(R.layout.activity_quiz);
 
         inicializarVistas();
-        crearPreguntas();
+
+        // --- ¡AQUÍ ESTÁ LA LÓGICA PARA SELECCIONAR 5 PREGUNTAS! ---
+
+        // 1. Creamos una lista temporal para guardar TODAS las preguntas.
+        List<Pregunta> todasLasPreguntas = new ArrayList<>();
+
+        // 2. Cargamos las preguntas locales ("hardcoded") en la lista temporal.
+        crearPreguntasLocales(todasLasPreguntas);
+
+        // 3. Inicializamos el Helper de la Base de Datos.
+        QuizDbHelper dbHelper = new QuizDbHelper(this);
+
+        // 4. Obtenemos las preguntas de la base de datos.
+        List<Pregunta> preguntasDeLaBD = dbHelper.getAllQuestions();
+
+        // 5. Añadimos las preguntas de la base de datos a la lista temporal.
+        if (preguntasDeLaBD != null && !preguntasDeLaBD.isEmpty()) {
+            todasLasPreguntas.addAll(preguntasDeLaBD);
+        }
+
+        // 6. Barajamos la lista completa para que el orden sea aleatorio.
+        Collections.shuffle(todasLasPreguntas);
+
+        // 7. Creamos la lista final del quiz cogiendo solo las primeras 5 preguntas.
+        if (todasLasPreguntas.size() > 5) {
+            listaDePreguntas = new ArrayList<>(todasLasPreguntas.subList(0, 5));
+        } else {
+            // Si hay 5 o menos preguntas en total, las usamos todas.
+            listaDePreguntas = todasLasPreguntas;
+        }
+        // --- FIN DE LA LÓGICA ---
+
+        // Si después de todo la lista sigue vacía, mostramos un error.
+        if (listaDePreguntas.isEmpty()) {
+            Toast.makeText(this, "No se pudieron cargar preguntas.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
         mostrarPregunta();
 
         buttonConfirmarRespuesta.setOnClickListener(v -> {
@@ -196,20 +237,15 @@ public class QuizActivity extends AppCompatActivity {
             return;
         }
 
-        // --- ¡AQUÍ ESTÁ LA NUEVA LÓGICA DE PUNTUACIÓN! ---
         if (respuestaSeleccionadaIndex == preguntaActual.getRespuestaCorrectaIndex()) {
-            // Si la respuesta es correcta, suma 1 punto.
-            puntuacion+=3; // Cambiado de puntuacion += 10 a puntuacion++
+            puntuacion++;
             mostrarDialogoDeAcierto();
         } else {
-            // Si la respuesta es incorrecta, resta 2 puntos.
             puntuacion -= 2;
             mostrarDialogoDeFallo();
         }
 
-        // Actualiza el texto de la puntuación en la pantalla.
         textViewPuntuacion.setText("Puntuación: " + puntuacion);
-        // --- FIN DE LA LÓGICA DE PUNTUACIÓN ---
     }
 
 
@@ -223,20 +259,17 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void ocultarTodosLosControles() {
-        // Ocultar todas las vistas de respuesta
         radioGroupOpciones.setVisibility(View.GONE);
         recyclerViewOpcionesImagen.setVisibility(View.GONE);
         listViewOpciones.setVisibility(View.GONE);
         spinnerOpciones.setVisibility(View.GONE);
-        // Y también ocultar la imagen de la pregunta por defecto
         imageViewPregunta.setVisibility(View.GONE);
     }
 
-    private void crearPreguntas() {
-        listaDePreguntas = new ArrayList<>();
-
+    // He cambiado el nombre del método para que sea más claro su propósito
+    private void crearPreguntasLocales(List<Pregunta> lista) {
         // Pregunta 1: Texto con RadioButtons
-        listaDePreguntas.add(new Pregunta(
+        lista.add(new Pregunta(
                 "¿Qué ejercicio se enfoca principalmente en los pectorales?",
                 Arrays.asList(
                         new Respuesta("Sentadilla"),
@@ -249,7 +282,7 @@ public class QuizActivity extends AppCompatActivity {
         ));
 
         // Pregunta 2: Texto con Opciones de Imagen
-        listaDePreguntas.add(new Pregunta(
+        lista.add(new Pregunta(
                 "¿Cuál de estas imágenes muestra una 'dominada' (pull-up)?",
                 Arrays.asList(
                         new Respuesta(R.drawable.sentadilla_img),
@@ -262,7 +295,7 @@ public class QuizActivity extends AppCompatActivity {
         ));
 
         // Pregunta 3: Texto con ListView
-        listaDePreguntas.add(new Pregunta(
+        lista.add(new Pregunta(
                 "¿Cuál de los siguientes es un macronutriente?",
                 Arrays.asList(
                         new Respuesta("Vitamina C"),
@@ -276,7 +309,7 @@ public class QuizActivity extends AppCompatActivity {
         ));
 
         // Pregunta 4: Texto con Spinner
-        listaDePreguntas.add(new Pregunta(
+        lista.add(new Pregunta(
                 "Para hipertrofia, el rango de repeticiones más común es...",
                 Arrays.asList(
                         new Respuesta("1-5"),
@@ -289,7 +322,7 @@ public class QuizActivity extends AppCompatActivity {
         ));
 
         // Pregunta 5: Imagen con Opciones de Texto (RadioButtons)
-        listaDePreguntas.add(new Pregunta(
+        lista.add(new Pregunta(
                 "¿Qué ejercicio se muestra en la imagen?", // Enunciado
                 Arrays.asList(
                         new Respuesta("Press de banca"),
@@ -303,7 +336,7 @@ public class QuizActivity extends AppCompatActivity {
         ));
     }
 
-    // --- EL RESTO DE MÉTODOS (DIÁLOGOS, REINICIO, ETC.) NO NECESITAN CAMBIOS ---
+    // --- El resto de métodos (diálogos, reinicio, etc.) no necesitan cambios ---
 
     private void finDelQuiz() {
         juegoTerminado = true;
@@ -348,11 +381,10 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void reiniciarQuiz() {
-        juegoTerminado = false;
-        preguntaActualIndex = 0;
-        puntuacion = 0;
-        textViewPuntuacion.setText("Puntuación: 0");
-        mostrarPregunta();
+        // Al reiniciar, simplemente recreamos la actividad para que la lógica de carga se ejecute de nuevo
+        Intent intent = getIntent();
+        finish();
+        startActivity(intent);
     }
 
     private void devolverPuntuacionYFinalizar(int score) {
