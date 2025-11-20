@@ -21,6 +21,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardViewPregunta"
         android:layout_width="0dp"
@@ -35,22 +36,43 @@
         app:strokeColor="#42A5F5"
         app:strokeWidth="1dp">
 
-        <TextView
-            android:id="@+id/textViewPregunta"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-condensed-medium"
-            android:gravity="center"
-            android:minHeight="120dp"
-            android:padding="16dp"
-            android:text="Cargando pregunta..."
-            android:textAppearance="?attr/textAppearanceTitleLarge"
-            android:textColor="@android:color/white"
-            android:shadowColor="#000000"
-            android:shadowDy="2"
-            android:shadowRadius="4"
-            android:textSize="20sp"/>
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp">
 
+            <!-- ¡TEMPORIZADOR AÑADIDO AQUÍ! -->
+            <TextView
+                android:id="@+id/textViewTemporizador"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="15"
+                android:textColor="@color/white"
+                android:textSize="28sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/textViewPregunta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="sans-serif-condensed-medium"
+                android:gravity="center"
+                android:minHeight="90dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="Cargando pregunta..."
+                android:textAppearance="?attr/textAppearanceTitleLarge"
+                android:textColor="@android:color/white"
+                android:shadowColor="#000000"
+                android:shadowDy="2"
+                android:shadowRadius="4"
+                android:textSize="20sp"/>
+
+        </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <!-- ImageView para la imagen de la pregunta (si la hay) -->

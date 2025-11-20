@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1C1B2B"
+    tools:context=".HelpActivity">
+
+    <!-- Título Principal -->
+    <TextView
+        android:id="@+id/textViewHelpTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        android:text="¿Cómo Jugar?"
+        android:textColor="@color/white"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Contenedor para las reglas, con fondo y esquinas redondeadas -->
+    <LinearLayout
+        android:id="@+id/rulesContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/dialog_background"
+        android:orientation="vertical"
+        android:padding="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewHelpTitle">
+
+        <!-- Regla 1: Objetivo del juego -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_target"
+            android:drawablePadding="16dp"
+            android:gravity="center_vertical"
+            android:text="El objetivo es conseguir la mayor puntuación posible en un quiz de 5 preguntas aleatorias."
+            android:textColor="#E0E0E0"
+            android:textSize="16sp"
+            app:drawableTint="#42A5F5" />
+
+        <!-- Separador -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="#4A476A" />
+
+        <!-- Regla 2: Respuestas correctas -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_check"
+            android:drawablePadding="16dp"
+            android:gravity="center_vertical"
+            android:text="Cada respuesta correcta suma 3 puntos."
+            android:textColor="#A5D6A7"
+            android:textSize="16sp"
+            app:drawableTint="#A5D6A7" />
+
+        <!-- Separador -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="#4A476A" />
+
+        <!-- Regla 3: Respuestas incorrectas -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_cross"
+            android:drawablePadding="16dp"
+            android:gravity="center_vertical"
+            android:text="Cada respuesta incorrecta resta 2 puntos."
+            android:textColor="#EF9A9A"
+            android:textSize="16sp"
+            app:drawableTint="#EF9A9A" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/goodLuckText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="¡Mucha suerte!"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:textStyle="italic"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/rulesContainer" />
+
+
+    <!-- Botón para volver, anclado a la parte inferior -->
+    <Button
+        android:id="@+id/buttonBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="48dp"
+        android:paddingStart="40dp"
+        android:paddingEnd="40dp"
+        android:text="Entendido"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

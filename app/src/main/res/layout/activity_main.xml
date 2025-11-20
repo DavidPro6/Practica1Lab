@@ -8,9 +8,7 @@
     android:background="#1C1B2B"
     tools:context=".MainActivity">
 
-    <!-- Icono decorativo en la parte superior -->
 
-    <!-- Título principal de la aplicación -->
 
     <ImageView
         android:id="@+id/imageViewIcono"
@@ -37,7 +35,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/imageViewIcono" />
 
-    <!-- Subtítulo o eslogan -->
     <TextView
         android:id="@+id/textViewSubtitulo"
         android:layout_width="wrap_content"
@@ -48,9 +45,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textViewTitulo" />
-
-
-    <!-- Botón para iniciar el quiz, anclado abajo -->
 
 
     <androidx.fragment.app.FragmentContainerView
@@ -84,5 +78,20 @@
         tools:layout="@layout/fragment_score"
         tools:layout_editor_absoluteX="205dp"
         tools:layout_editor_absoluteY="524dp" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabHelp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:layout_marginEnd="20dp"
+        android:src="@drawable/ic_help_question"
+        app:tint="@android:color/white"
+        app:backgroundTint="#FFC107"
+        app:fabSize="normal"
+        android:contentDescription="Botón de Ayuda"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

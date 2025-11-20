@@ -1,7 +1,9 @@
 package com.example.myapplication;
 
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
@@ -14,6 +16,7 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.graphics.Color;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,26 +36,28 @@ import java.util.stream.Collectors;
 
 public class QuizActivity extends AppCompatActivity {
 
-    private TextView textViewPuntuacion, textViewPregunta;
-    private Button buttonConfirmarRespuesta;
+    // --- CORRECCIÓN FINAL: Un MediaPlayer para cada tipo de sonido concurrente ---
+    private MediaPlayer responseSoundPlayer; // Para acierto (sound1) y fallo (sound2)
+    private MediaPlayer timerWarningPlayer; // Exclusivamente para la advertencia (sound3)
+    private long tiempoInicioQuiz;
 
-    // Vistas para los tipos de respuesta
+
+    // Vistas y variables del Quiz (sin cambios)
+    private TextView textViewPuntuacion, textViewPregunta, textViewTemporizador;
+    private Button buttonConfirmarRespuesta;
     private RadioGroup radioGroupOpciones;
     private RecyclerView recyclerViewOpcionesImagen;
     private ListView listViewOpciones;
     private Spinner spinnerOpciones;
-
-    // Vista para la imagen de la pregunta
     private ImageView imageViewPregunta;
-
     private List<RadioButton> radioButtons;
-
     private List<Pregunta> listaDePreguntas;
+    private CountDownTimer countDownTimer;
+    private static final long TIEMPO_POR_PREGUNTA_MS = 15000;
     private int preguntaActualIndex = 0;
     private int puntuacion = 0;
     private boolean juegoTerminado = false;
-
-    // Adapters
+    private boolean tiempoAgotado = false;
     private RespuestasAdapter respuestasAdapter;
     private ArrayAdapter<String> listViewAdapter;
     private ArrayAdapter<String> spinnerAdapter;
@@ -62,40 +67,11 @@ public class QuizActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quiz);
 
+        tiempoInicioQuiz = System.currentTimeMillis();
+
         inicializarVistas();
+        cargarPreguntas();
 
-        // --- ¡AQUÍ ESTÁ LA LÓGICA PARA SELECCIONAR 5 PREGUNTAS! ---
-
-        // 1. Creamos una lista temporal para guardar TODAS las preguntas.
-        List<Pregunta> todasLasPreguntas = new ArrayList<>();
-
-        // 2. Cargamos las preguntas locales ("hardcoded") en la lista temporal.
-        crearPreguntasLocales(todasLasPreguntas);
-
-        // 3. Inicializamos el Helper de la Base de Datos.
-        QuizDbHelper dbHelper = new QuizDbHelper(this);
-
-        // 4. Obtenemos las preguntas de la base de datos.
-        List<Pregunta> preguntasDeLaBD = dbHelper.getAllQuestions();
-
-        // 5. Añadimos las preguntas de la base de datos a la lista temporal.
-        if (preguntasDeLaBD != null && !preguntasDeLaBD.isEmpty()) {
-            todasLasPreguntas.addAll(preguntasDeLaBD);
-        }
-
-        // 6. Barajamos la lista completa para que el orden sea aleatorio.
-        Collections.shuffle(todasLasPreguntas);
-
-        // 7. Creamos la lista final del quiz cogiendo solo las primeras 5 preguntas.
-        if (todasLasPreguntas.size() > 5) {
-            listaDePreguntas = new ArrayList<>(todasLasPreguntas.subList(0, 5));
-        } else {
-            // Si hay 5 o menos preguntas en total, las usamos todas.
-            listaDePreguntas = todasLasPreguntas;
-        }
-        // --- FIN DE LA LÓGICA ---
-
-        // Si después de todo la lista sigue vacía, mostramos un error.
         if (listaDePreguntas.isEmpty()) {
             Toast.makeText(this, "No se pudieron cargar preguntas.", Toast.LENGTH_LONG).show();
             finish();
@@ -113,18 +89,147 @@ public class QuizActivity extends AppCompatActivity {
         });
     }
 
+    private void iniciarTemporizador() {
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
+
+        textViewTemporizador.setText(String.valueOf(TIEMPO_POR_PREGUNTA_MS / 1000));
+        textViewTemporizador.setTextColor(Color.WHITE);
+
+        countDownTimer = new CountDownTimer(TIEMPO_POR_PREGUNTA_MS, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                textViewTemporizador.setText(String.valueOf(millisUntilFinished / 1000));
+                // Lógica de advertencia a los 5 segundos
+                if (millisUntilFinished / 1000 == 5) {
+                    textViewTemporizador.setTextColor(Color.RED);
+                    playTimerWarningSound(); // Llama al método de sonido exclusivo
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                textViewTemporizador.setText("0");
+                tiempoAgotado = true;
+                comprobarRespuesta();
+            }
+        }.start();
+    }
+
+    private void comprobarRespuesta() {
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
+        buttonConfirmarRespuesta.setEnabled(false);
+
+        Pregunta preguntaActual = listaDePreguntas.get(preguntaActualIndex);
+        int respuestaSeleccionadaIndex = -1;
+
+        if (!tiempoAgotado) {
+            switch (preguntaActual.getTipo()) {
+                case TEXTO_RADIOBUTTON:
+                    int selectedId = radioGroupOpciones.getCheckedRadioButtonId();
+                    if (selectedId != -1) respuestaSeleccionadaIndex = radioButtons.indexOf(findViewById(selectedId));
+                    break;
+                case IMAGEN_GRID:
+                    if (respuestasAdapter != null) respuestaSeleccionadaIndex = respuestasAdapter.getSelectedPosition();
+                    break;
+                case TEXTO_LISTVIEW:
+                    respuestaSeleccionadaIndex = listViewOpciones.getCheckedItemPosition();
+                    break;
+                case TEXTO_SPINNER:
+                    respuestaSeleccionadaIndex = spinnerOpciones.getSelectedItemPosition();
+                    break;
+            }
+        }
+
+        if (respuestaSeleccionadaIndex == -1) {
+            if (tiempoAgotado) {
+                puntuacion -= 2;
+                playResponseSound(R.raw.sound2);
+                textViewPuntuacion.setText("Puntuación: " + puntuacion);
+                mostrarDialogoDeFallo("¡Tiempo agotado!");
+            } else {
+                mostrarDialogoSinRespuesta();
+                buttonConfirmarRespuesta.setEnabled(true);
+            }
+            return;
+        }
+
+        if (respuestaSeleccionadaIndex == preguntaActual.getRespuestaCorrectaIndex()) {
+            puntuacion+=3;
+            playResponseSound(R.raw.sound1);
+            textViewPuntuacion.setText("Puntuación: " + puntuacion);
+            mostrarDialogoDeAcierto();
+        } else {
+            puntuacion -= 2;
+            playResponseSound(R.raw.sound2);
+            textViewPuntuacion.setText("Puntuación: " + puntuacion);
+            mostrarDialogoDeFallo("¡Respuesta Incorrecta!");
+        }
+    }
+
+    // --- MÉTODOS DE SONIDO REESTRUCTURADOS ---
+
+    private void playResponseSound(int soundId) {
+        // Este método gestiona sound1 y sound2
+        if (responseSoundPlayer != null) {
+            responseSoundPlayer.release();
+        }
+        responseSoundPlayer = MediaPlayer.create(this, soundId);
+        if (responseSoundPlayer != null) {
+            responseSoundPlayer.setOnCompletionListener(mp -> mp.release());
+            responseSoundPlayer.start();
+        }
+    }
+
+    private void playTimerWarningSound() {
+        if (timerWarningPlayer != null) {
+            timerWarningPlayer.release();
+            timerWarningPlayer = null; // Opcional pero buena práctica.
+        }
+
+        // 2. Crear una instancia completamente nueva.
+        timerWarningPlayer = MediaPlayer.create(this, R.raw.sound3);
+
+        // 3. Si se creó correctamente, configurarla y reproducirla.
+        if (timerWarningPlayer != null) {
+            // Establecer el listener para que se libere a sí mismo AL TERMINAR.
+            timerWarningPlayer.setOnCompletionListener(mp -> {
+                mp.release();
+                timerWarningPlayer = null; // Para asegurar que la próxima vez se cree de nuevo.
+            });
+            timerWarningPlayer.start();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Liberar todos los recursos de sonido
+        if (responseSoundPlayer != null) {
+            responseSoundPlayer.release();
+            responseSoundPlayer = null;
+        }
+        if (timerWarningPlayer != null) {
+            timerWarningPlayer.release();
+            timerWarningPlayer = null;
+        }
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
+    }
+
     private void inicializarVistas() {
         textViewPuntuacion = findViewById(R.id.textViewPuntuacion);
         textViewPregunta = findViewById(R.id.textViewPregunta);
+        textViewTemporizador = findViewById(R.id.textViewTemporizador);
         buttonConfirmarRespuesta = findViewById(R.id.buttonConfirmarRespuesta);
-
-        // Vistas de respuesta
         radioGroupOpciones = findViewById(R.id.radioGroupOpciones);
         recyclerViewOpcionesImagen = findViewById(R.id.recyclerViewOpcionesImagen);
         listViewOpciones = findViewById(R.id.listViewOpciones);
         spinnerOpciones = findViewById(R.id.spinnerOpciones);
-
-        // Vista de imagen de pregunta
         imageViewPregunta = findViewById(R.id.imageViewPregunta);
 
         radioButtons = new ArrayList<>();
@@ -134,29 +239,65 @@ public class QuizActivity extends AppCompatActivity {
         radioButtons.add(findViewById(R.id.radioButtonOpcion4));
     }
 
+    private void cargarPreguntas() {
+        List<Pregunta> todasLasPreguntas = new ArrayList<>();
+        crearPreguntasLocales(todasLasPreguntas);
+        QuizDbHelper dbHelper = new QuizDbHelper(this);
+        List<Pregunta> preguntasDeLaBD = dbHelper.getAllQuestions();
+
+        if (preguntasDeLaBD != null && !preguntasDeLaBD.isEmpty()) {
+            todasLasPreguntas.addAll(preguntasDeLaBD);
+        }
+
+        Collections.shuffle(todasLasPreguntas);
+
+        if (todasLasPreguntas.size() > 5) {
+            listaDePreguntas = new ArrayList<>(todasLasPreguntas.subList(0, 5));
+        } else {
+            listaDePreguntas = todasLasPreguntas;
+        }
+    }
+
     private void mostrarPregunta() {
         if (preguntaActualIndex < listaDePreguntas.size()) {
+            tiempoAgotado = false; // Reiniciar flag
             Pregunta preguntaActual = listaDePreguntas.get(preguntaActualIndex);
             textViewPregunta.setText(preguntaActual.getTextoPregunta());
-
             ocultarTodosLosControles();
             configurarControlesParaPregunta(preguntaActual);
-
             buttonConfirmarRespuesta.setEnabled(true);
+            iniciarTemporizador();
         } else {
             finDelQuiz();
         }
     }
 
+    private void avanzarPregunta() {
+        preguntaActualIndex++;
+        mostrarPregunta();
+    }
+
+    private void reiniciarQuiz() {
+        Intent intent = getIntent();
+        finish();
+        startActivity(intent);
+    }
+
+    // ... (Y aquí el resto de métodos: diálogos, crearPreguntas, etc.)
+    private void ocultarTodosLosControles() {
+        radioGroupOpciones.setVisibility(View.GONE);
+        recyclerViewOpcionesImagen.setVisibility(View.GONE);
+        listViewOpciones.setVisibility(View.GONE);
+        spinnerOpciones.setVisibility(View.GONE);
+        imageViewPregunta.setVisibility(View.GONE);
+    }
     private void configurarControlesParaPregunta(Pregunta pregunta) {
-        // Mostrar la imagen de la pregunta si existe
         if (pregunta.getImagenPreguntaId() != 0) {
             imageViewPregunta.setImageResource(pregunta.getImagenPreguntaId());
             imageViewPregunta.setVisibility(View.VISIBLE);
         } else {
             imageViewPregunta.setVisibility(View.GONE);
         }
-
         try {
             switch (pregunta.getTipo()) {
                 case TEXTO_RADIOBUTTON:
@@ -171,14 +312,12 @@ public class QuizActivity extends AppCompatActivity {
                         }
                     }
                     break;
-
                 case IMAGEN_GRID:
                     recyclerViewOpcionesImagen.setVisibility(View.VISIBLE);
                     respuestasAdapter = new RespuestasAdapter(this, pregunta.getOpciones(), position -> {});
                     recyclerViewOpcionesImagen.setLayoutManager(new GridLayoutManager(this, 2));
                     recyclerViewOpcionesImagen.setAdapter(respuestasAdapter);
                     break;
-
                 case TEXTO_LISTVIEW:
                     listViewOpciones.setVisibility(View.VISIBLE);
                     List<String> opcionesListView = pregunta.getOpciones().stream()
@@ -189,7 +328,6 @@ public class QuizActivity extends AppCompatActivity {
                     listViewOpciones.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
                     listViewOpciones.clearChoices();
                     break;
-
                 case TEXTO_SPINNER:
                     spinnerOpciones.setVisibility(View.VISIBLE);
                     List<String> opcionesSpinner = pregunta.getOpciones().stream()
@@ -204,291 +342,119 @@ public class QuizActivity extends AppCompatActivity {
             mostrarDialogoDeError("Error al Cargar Pregunta", e.getMessage());
         }
     }
-
-    private void comprobarRespuesta() {
-        buttonConfirmarRespuesta.setEnabled(false);
-        Pregunta preguntaActual = listaDePreguntas.get(preguntaActualIndex);
-        int respuestaSeleccionadaIndex = -1;
-
-        switch (preguntaActual.getTipo()) {
-            case TEXTO_RADIOBUTTON:
-                int selectedRadioButtonId = radioGroupOpciones.getCheckedRadioButtonId();
-                if (selectedRadioButtonId != -1) {
-                    RadioButton selectedRadioButton = findViewById(selectedRadioButtonId);
-                    respuestaSeleccionadaIndex = radioButtons.indexOf(selectedRadioButton);
-                }
-                break;
-            case IMAGEN_GRID:
-                if (respuestasAdapter != null) {
-                    respuestaSeleccionadaIndex = respuestasAdapter.getSelectedPosition();
-                }
-                break;
-            case TEXTO_LISTVIEW:
-                respuestaSeleccionadaIndex = listViewOpciones.getCheckedItemPosition();
-                break;
-            case TEXTO_SPINNER:
-                respuestaSeleccionadaIndex = spinnerOpciones.getSelectedItemPosition();
-                break;
-        }
-
-        if (respuestaSeleccionadaIndex == -1) {
-            mostrarDialogoSinRespuesta();
-            buttonConfirmarRespuesta.setEnabled(true);
-            return;
-        }
-
-        if (respuestaSeleccionadaIndex == preguntaActual.getRespuestaCorrectaIndex()) {
-            puntuacion++;
-            mostrarDialogoDeAcierto();
-        } else {
-            puntuacion -= 2;
-            mostrarDialogoDeFallo();
-        }
-
-        textViewPuntuacion.setText("Puntuación: " + puntuacion);
-    }
-
-
-    private void avanzarPregunta() {
-        preguntaActualIndex++;
-        if (preguntaActualIndex < listaDePreguntas.size()) {
-            mostrarPregunta();
-        } else {
-            finDelQuiz();
-        }
-    }
-
-    private void ocultarTodosLosControles() {
-        radioGroupOpciones.setVisibility(View.GONE);
-        recyclerViewOpcionesImagen.setVisibility(View.GONE);
-        listViewOpciones.setVisibility(View.GONE);
-        spinnerOpciones.setVisibility(View.GONE);
-        imageViewPregunta.setVisibility(View.GONE);
-    }
-
-    // He cambiado el nombre del método para que sea más claro su propósito
     private void crearPreguntasLocales(List<Pregunta> lista) {
-        // Pregunta 1: Texto con RadioButtons
-        lista.add(new Pregunta(
-                "¿Qué ejercicio se enfoca principalmente en los pectorales?",
-                Arrays.asList(
-                        new Respuesta("Sentadilla"),
-                        new Respuesta("Press de banca"), // Correcta
-                        new Respuesta("Peso muerto"),
-                        new Respuesta("Curl de bíceps")
-                ),
-                1,
-                Pregunta.TipoPregunta.TEXTO_RADIOBUTTON
-        ));
-
-        // Pregunta 2: Texto con Opciones de Imagen
-        lista.add(new Pregunta(
-                "¿Cuál de estas imágenes muestra una 'dominada' (pull-up)?",
-                Arrays.asList(
-                        new Respuesta(R.drawable.sentadilla_img),
-                        new Respuesta(R.drawable.press_banca_img),
-                        new Respuesta(R.drawable.dominada_img), // Correcta
-                        new Respuesta(R.drawable.curl_biceps_img)
-                ),
-                2,
-                Pregunta.TipoPregunta.IMAGEN_GRID
-        ));
-
-        // Pregunta 3: Texto con ListView
-        lista.add(new Pregunta(
-                "¿Cuál de los siguientes es un macronutriente?",
-                Arrays.asList(
-                        new Respuesta("Vitamina C"),
-                        new Respuesta("Calcio"),
-                        new Respuesta("Proteína"), // Correcta
-                        new Respuesta("Hierro"),
-                        new Respuesta("Magnesio")
-                ),
-                2,
-                Pregunta.TipoPregunta.TEXTO_LISTVIEW
-        ));
-
-        // Pregunta 4: Texto con Spinner
-        lista.add(new Pregunta(
-                "Para hipertrofia, el rango de repeticiones más común es...",
-                Arrays.asList(
-                        new Respuesta("1-5"),
-                        new Respuesta("6-12"), // Correcta
-                        new Respuesta("15-20"),
-                        new Respuesta("Más de 25")
-                ),
-                1,
-                Pregunta.TipoPregunta.TEXTO_SPINNER
-        ));
-
-        // Pregunta 5: Imagen con Opciones de Texto (RadioButtons)
-        lista.add(new Pregunta(
-                "¿Qué ejercicio se muestra en la imagen?", // Enunciado
-                Arrays.asList(
-                        new Respuesta("Press de banca"),
-                        new Respuesta("Peso muerto"),
-                        new Respuesta("Sentadilla"), // Respuesta Correcta
-                        new Respuesta("Remo con barra")
-                ),
-                2, // Índice de la respuesta correcta ("Sentadilla")
-                Pregunta.TipoPregunta.TEXTO_RADIOBUTTON,
-                R.drawable.sentadilla_img // ID de la imagen a mostrar
-        ));
+        lista.add(new Pregunta("¿Qué ejercicio se enfoca principalmente en los pectorales?", Arrays.asList(new Respuesta("Sentadilla"), new Respuesta("Press de banca"), new Respuesta("Peso muerto"), new Respuesta("Curl de bíceps")), 1, Pregunta.TipoPregunta.TEXTO_RADIOBUTTON));
+        lista.add(new Pregunta("¿Cuál de estas imágenes muestra una 'dominada' (pull-up)?", Arrays.asList(new Respuesta(R.drawable.sentadilla_img), new Respuesta(R.drawable.press_banca_img), new Respuesta(R.drawable.dominada_img), new Respuesta(R.drawable.curl_biceps_img)), 2, Pregunta.TipoPregunta.IMAGEN_GRID));
+        lista.add(new Pregunta("¿Cuál de los siguientes es un macronutriente?", Arrays.asList(new Respuesta("Vitamina C"), new Respuesta("Calcio"), new Respuesta("Proteína"), new Respuesta("Hierro"), new Respuesta("Magnesio")), 2, Pregunta.TipoPregunta.TEXTO_LISTVIEW));
+        lista.add(new Pregunta("Para hipertrofia, el rango de repeticiones más común es...", Arrays.asList(new Respuesta("1-5"), new Respuesta("6-12"), new Respuesta("15-20"), new Respuesta("Más de 25")), 1, Pregunta.TipoPregunta.TEXTO_SPINNER));
+        lista.add(new Pregunta("¿Qué ejercicio se muestra en la imagen?", Arrays.asList(new Respuesta("Press de banca"), new Respuesta("Peso muerto"), new Respuesta("Sentadilla"), new Respuesta("Remo con barra")), 2, Pregunta.TipoPregunta.TEXTO_RADIOBUTTON, R.drawable.sentadilla_img));
     }
-
-    // --- El resto de métodos (diálogos, reinicio, etc.) no necesitan cambios ---
-
     private void finDelQuiz() {
         juegoTerminado = true;
         ocultarTodosLosControles();
-
+        long tiempoFinQuiz = System.currentTimeMillis();
+        long tiempoTotalMs = tiempoFinQuiz - tiempoInicioQuiz;
+        long segundosTotales = tiempoTotalMs / 1000;
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom, null);
-
         TextView dialogTitle = dialogView.findViewById(R.id.dialog_title);
         TextView dialogMessage = dialogView.findViewById(R.id.dialog_message);
         Button buttonPositive = dialogView.findViewById(R.id.dialog_button_positive);
         Button buttonNegative = dialogView.findViewById(R.id.dialog_button_negative);
-
         dialogTitle.setText("¡Quiz Finalizado!");
-        dialogMessage.setText("Tu puntuación final es: " + puntuacion);
-
+        String mensajeFinal = "Puntuación final: " + puntuacion + "\nTiempo total: " + segundosTotales + " segundos";
+        dialogMessage.setText(mensajeFinal);
+        dialogMessage.setText("Tu puntuación final es: " + puntuacion+"\nTiempo total: " + segundosTotales + " segundos ");
         buttonPositive.setText("Volver a Jugar");
         buttonNegative.setText("Salir");
-
         builder.setView(dialogView);
         final AlertDialog dialog = builder.create();
-
         buttonPositive.setOnClickListener(v -> {
             dialog.dismiss();
             devolverPuntuacionYFinalizar(puntuacion);
         });
-
         buttonNegative.setOnClickListener(v -> {
             dialog.dismiss();
             devolverPuntuacionYFinalizar(puntuacion);
         });
-
         dialog.setCancelable(false);
         dialog.show();
-
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setLayout(
-                    (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-            );
+            dialog.getWindow().setLayout((int) (getResources().getDisplayMetrics().widthPixels * 0.9), android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
         }
     }
-
-    private void reiniciarQuiz() {
-        // Al reiniciar, simplemente recreamos la actividad para que la lógica de carga se ejecute de nuevo
-        Intent intent = getIntent();
-        finish();
-        startActivity(intent);
-    }
-
     private void devolverPuntuacionYFinalizar(int score) {
         Intent resultIntent = new Intent();
         resultIntent.putExtra("final_score", score);
         setResult(RESULT_OK, resultIntent);
         finish();
     }
-
     private void mostrarDialogoDeError(String title, String message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom, null);
-
         TextView dialogTitle = dialogView.findViewById(R.id.dialog_title);
         TextView dialogMessage = dialogView.findViewById(R.id.dialog_message);
         Button buttonPositive = dialogView.findViewById(R.id.dialog_button_positive);
         Button buttonNegative = dialogView.findViewById(R.id.dialog_button_negative);
-
         dialogTitle.setText(title);
         dialogMessage.setText("Ha ocurrido un problema:\n" + message);
         buttonPositive.setText("Saltar Pregunta");
         buttonNegative.setText("Reiniciar Quiz");
-
         builder.setView(dialogView);
         final AlertDialog dialog = builder.create();
-
         buttonPositive.setOnClickListener(v -> {
             dialog.dismiss();
             avanzarPregunta();
         });
-
         buttonNegative.setOnClickListener(v -> {
             dialog.dismiss();
             reiniciarQuiz();
         });
-
         dialog.setCancelable(false);
         dialog.show();
-
-
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setLayout(
-                    (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-            );
+            dialog.getWindow().setLayout((int) (getResources().getDisplayMetrics().widthPixels * 0.9), android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
         }
     }
-
     private void mostrarDialogoSinRespuesta() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom, null);
-
         TextView dialogTitle = dialogView.findViewById(R.id.dialog_title);
         TextView dialogMessage = dialogView.findViewById(R.id.dialog_message);
         Button buttonPositive = dialogView.findViewById(R.id.dialog_button_positive);
         Button buttonNegative = dialogView.findViewById(R.id.dialog_button_negative);
-
         dialogTitle.setText("¡Atención!");
         dialogMessage.setText("Por favor, selecciona una respuesta para continuar.");
         buttonPositive.setText("Entendido");
         buttonNegative.setVisibility(View.GONE);
-
         builder.setView(dialogView);
         final AlertDialog dialog = builder.create();
-
         buttonPositive.setOnClickListener(v -> dialog.dismiss());
         dialog.setCancelable(false);
         dialog.show();
-
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setLayout(
-                    (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-            );
+            dialog.getWindow().setLayout((int) (getResources().getDisplayMetrics().widthPixels * 0.9), android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
         }
     }
-
     private void mostrarDialogoDeAcierto() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom, null);
-
         TextView dialogTitle = dialogView.findViewById(R.id.dialog_title);
         TextView dialogMessage = dialogView.findViewById(R.id.dialog_message);
         Button buttonPositive = dialogView.findViewById(R.id.dialog_button_positive);
         Button buttonNegative = dialogView.findViewById(R.id.dialog_button_negative);
-
         dialogTitle.setText("¡Correcto!");
-        dialogTitle.setTextColor(android.graphics.Color.parseColor("#FFC107"));
+        dialogTitle.setTextColor(Color.parseColor("#FFC107"));
         dialogMessage.setText("¡Sigue así!");
         buttonPositive.setVisibility(View.GONE);
         buttonNegative.setVisibility(View.GONE);
-
         builder.setView(dialogView);
         final AlertDialog dialog = builder.create();
         dialog.setCancelable(false);
         dialog.show();
-
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setLayout(
-                    (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-            );
+            dialog.getWindow().setLayout((int) (getResources().getDisplayMetrics().widthPixels * 0.9), android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
         }
-
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             if (dialog.isShowing()) {
                 dialog.dismiss();
@@ -496,41 +462,43 @@ public class QuizActivity extends AppCompatActivity {
             avanzarPregunta();
         }, 1500);
     }
-
-    private void mostrarDialogoDeFallo() {
+    private void mostrarDialogoDeFallo(String title) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom, null);
-
         TextView dialogTitle = dialogView.findViewById(R.id.dialog_title);
         TextView dialogMessage = dialogView.findViewById(R.id.dialog_message);
         Button buttonPositive = dialogView.findViewById(R.id.dialog_button_positive);
         Button buttonNegative = dialogView.findViewById(R.id.dialog_button_negative);
-
-        dialogTitle.setText("¡Respuesta Incorrecta!");
-        dialogMessage.setText("Has fallado. ¿Qué te gustaría hacer?");
+        dialogTitle.setText(title);
+        dialogMessage.setText("Has perdido 2 puntos. ¿Continuar?");
         builder.setView(dialogView);
         final AlertDialog dialog = builder.create();
-
         buttonPositive.setText("Continuar");
         buttonPositive.setOnClickListener(v -> {
             dialog.dismiss();
             avanzarPregunta();
         });
-
         buttonNegative.setText("Reiniciar Test");
         buttonNegative.setOnClickListener(v -> {
             dialog.dismiss();
             reiniciarQuiz();
         });
-
         dialog.setCancelable(false);
         dialog.show();
-
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setLayout(
-                    (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-            );
+            dialog.getWindow().setLayout((int) (getResources().getDisplayMetrics().widthPixels * 0.9), android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        MusicManager.getInstance().startMusic();
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (!isChangingConfigurations()) {
+            MusicManager.getInstance().pauseMusic();
         }
     }
 }
