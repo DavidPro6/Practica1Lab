@@ -13,11 +13,9 @@ public class HelpActivity extends AppCompatActivity {
         setContentView(R.layout.activity_help);
 
         Button buttonBack = findViewById(R.id.buttonBack);
-        // Al pulsar el botón "Volver", se cierra esta actividad y se regresa a la anterior.
         buttonBack.setOnClickListener(v -> finish());
     }
 
-    // --- Controlamos la música también en esta actividad ---
     @Override
     protected void onResume() {
         super.onResume();

@@ -36,13 +36,11 @@ import java.util.stream.Collectors;
 
 public class QuizActivity extends AppCompatActivity {
 
-    // --- CORRECCIÓN FINAL: Un MediaPlayer para cada tipo de sonido concurrente ---
-    private MediaPlayer responseSoundPlayer; // Para acierto (sound1) y fallo (sound2)
-    private MediaPlayer timerWarningPlayer; // Exclusivamente para la advertencia (sound3)
+    private MediaPlayer responseSoundPlayer;
+    private MediaPlayer timerWarningPlayer;
     private long tiempoInicioQuiz;
 
 
-    // Vistas y variables del Quiz (sin cambios)
     private TextView textViewPuntuacion, textViewPregunta, textViewTemporizador;
     private Button buttonConfirmarRespuesta;
     private RadioGroup radioGroupOpciones;
@@ -101,7 +99,6 @@ public class QuizActivity extends AppCompatActivity {
             @Override
             public void onTick(long millisUntilFinished) {
                 textViewTemporizador.setText(String.valueOf(millisUntilFinished / 1000));
-                // Lógica de advertencia a los 5 segundos
                 if (millisUntilFinished / 1000 == 5) {
                     textViewTemporizador.setTextColor(Color.RED);
                     playTimerWarningSound(); // Llama al método de sonido exclusivo
@@ -170,7 +167,6 @@ public class QuizActivity extends AppCompatActivity {
         }
     }
 
-    // --- MÉTODOS DE SONIDO REESTRUCTURADOS ---
 
     private void playResponseSound(int soundId) {
         // Este método gestiona sound1 y sound2
@@ -187,18 +183,15 @@ public class QuizActivity extends AppCompatActivity {
     private void playTimerWarningSound() {
         if (timerWarningPlayer != null) {
             timerWarningPlayer.release();
-            timerWarningPlayer = null; // Opcional pero buena práctica.
+            timerWarningPlayer = null;
         }
 
-        // 2. Crear una instancia completamente nueva.
         timerWarningPlayer = MediaPlayer.create(this, R.raw.sound3);
 
-        // 3. Si se creó correctamente, configurarla y reproducirla.
         if (timerWarningPlayer != null) {
-            // Establecer el listener para que se libere a sí mismo AL TERMINAR.
             timerWarningPlayer.setOnCompletionListener(mp -> {
                 mp.release();
-                timerWarningPlayer = null; // Para asegurar que la próxima vez se cree de nuevo.
+                timerWarningPlayer = null;
             });
             timerWarningPlayer.start();
         }
@@ -207,7 +200,6 @@ public class QuizActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Liberar todos los recursos de sonido
         if (responseSoundPlayer != null) {
             responseSoundPlayer.release();
             responseSoundPlayer = null;
@@ -283,7 +275,6 @@ public class QuizActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    // ... (Y aquí el resto de métodos: diálogos, crearPreguntas, etc.)
     private void ocultarTodosLosControles() {
         radioGroupOpciones.setVisibility(View.GONE);
         recyclerViewOpcionesImagen.setVisibility(View.GONE);

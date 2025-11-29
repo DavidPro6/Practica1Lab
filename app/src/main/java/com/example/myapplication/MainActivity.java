@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-// 1. La Activity ahora implementa la interfaz del fragmento
 public class MainActivity extends AppCompatActivity implements BlankFragment.OnStartQuizListener {
 
     private MainViewModel mainViewModel;
@@ -42,14 +41,12 @@ public class MainActivity extends AppCompatActivity implements BlankFragment.OnS
     @Override
     protected void onResume() {
         super.onResume();
-        MusicManager.getInstance().startMusic(); // Reanuda la música al volver a la actividad
+        MusicManager.getInstance().startMusic();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        // Verificamos si estamos cambiando de actividad. Si la app se va a segundo plano, pausamos.
-        // Esto evita que la música se pause brevemente al abrir QuizActivity.
         if (!isChangingConfigurations()) {
             MusicManager.getInstance().pauseMusic();
         }
