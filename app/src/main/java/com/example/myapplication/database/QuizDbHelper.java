@@ -58,29 +58,29 @@ public class QuizDbHelper extends SQLiteOpenHelper {
 
     private void fillDatabase(SQLiteDatabase db) {
         addPreguntaConRespuestas(db,
-                "¿Cuál es la capital de Japón?",
-                "Tokio", // Respuesta correcta
-                "Kioto", "Osaka", "Hiroshima");
+                "¿Qué significa el acrónimo 'RM' en el contexto del levantamiento de pesas?",
+                "Repetición Máxima", // Respuesta correcta
+                "Ritmo Muscular", "Resistencia Mínima", "Rango de Movimiento");
 
         addPreguntaConRespuestas(db,
-                "¿Quién escribió 'Cien años de soledad'?",
-                "Gabriel García Márquez",
-                "Mario Vargas Llosa", "Julio Cortázar", "Pablo Neruda");
+                "¿Cuál de estos ejercicios se enfoca principalmente en los hombros?",
+                "El press militar", // Respuesta correcta
+                "El peso muerto", "Las zancadas (Lunges)", "El remo con barra");
 
         addPreguntaConRespuestas(db,
-                "¿En qué año llegó el hombre a la Luna por primera vez?",
-                "1969", // Respuesta correcta
-                "1965", "1972", "1981");
+                "Un entrenamiento de tipo 'HIIT' se caracteriza por ser...",
+                "Intervalos de alta intensidad", // Respuesta correcta
+                "De larga duración y baja intensidad", "Exclusivamente con peso corporal", "Enfocado en la flexibilidad");
 
         addPreguntaConRespuestas(db,
-                "¿Cuál es el río más largo del mundo?",
-                "El río Amazonas", // Respuesta correcta
-                "El río Nilo", "El río Misisipi", "El río Yangtsé");
+                "En una rutina 'Push/Pull/Legs' (PPL), ¿qué ejercicio correspondería al día de 'Pull' (Tirón)?",
+                "Dominadas (Pull-ups)", // Respuesta correcta
+                "Press de banca (Bench Press)", "Sentadillas (Squats)", "Fondos en paralelas (Dips)");
 
         addPreguntaConRespuestas(db,
-                "¿Qué planeta es conocido como el 'Planeta Rojo'?",
-                "Marte", // Respuesta correcta
-                "Júpiter", "Venus", "Saturno");
+                "¿Qué tipo de agarre implica tener las palmas de las manos mirando hacia ti?",
+                "Supino", // Respuesta correcta
+                "Prono", "Neutro", "Mixto");
     }
 
     private void addPreguntaConRespuestas(SQLiteDatabase db, String enunciado, String respuestaCorrecta, String... respuestasIncorrectas) {
